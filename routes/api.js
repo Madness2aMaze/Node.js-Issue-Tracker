@@ -15,12 +15,18 @@ module.exports = (app, db) => {
   
   app.route('/api/issues/:project')
     .get((req, res) => {
-    var project = req.params.project;
+    const project = req.params.project;
+    db.collection(project).find({}).toArray((err, issues) => {
+      err ? res.json(err) : res.json(issues);
+      //console.log(issues);
+      db.close();
+    });
   })
   
   //submitting the issue
-    .post((req, res, next) => {
-    var project = req.params.project;
+    .post((req, res) => {
+    const project = req.params.project;
+    console.log(project);
     
     const issueTitle = req.body.issue_title;
     const issueText = req.body.issue_text;
@@ -33,7 +39,7 @@ module.exports = (app, db) => {
     } else if (!submitter) { //checking to see if the user entered his name in the input field
       res.json('Please enter your name');
     } else { //all fields are filled => proceed to add the issue to the database
-      db.collection('projects').insertOne({
+      db.collection(project).insertOne({
         "issue_title": req.body.issue_title,
         "issue_text": req.body.issue_text,
         "created_on": new Date().toISOString(),
@@ -42,31 +48,32 @@ module.exports = (app, db) => {
         "assigned_to": req.body.assigned_to,
         "open": true,
         "status_text": req.body.status_text
-      }, (err, doc) => {
+      }, (err, issue) => {
         console.log('Issue ' + req.body.issue_title + ' has been successfully submitted.');
-        res.json(doc.ops);
+        res.json(issue.ops);
         if (err) {
           res.redirect('/');
         } else {
-          next(null, doc);
+          res.json(null, issue);
         }
+        db.close();
       })
     }
   })
   
   //updating the issue
-    .put((req, res, next) => {
-    var project = req.params.project;
+    .put((req, res) => {
+    const project = req.params.project;
     
-    /*db.collection('projects').findOne({
+    /*db.collection(project).findOne({
       id: req.body._id
     }, (err, issue) => {
       if (err) {
         next(err);
-      } else if (project) {
+      } else if (issue) {
         res.redirect('/');
       } else {
-        db.collection('projects').insertOne({
+        db.collection(project).insertOne({
           "issue_title": req.body.issue_title,
           "issue_text": req.body.issue_text,
           "created_on": new Date().toISOString(),
@@ -89,9 +96,19 @@ module.exports = (app, db) => {
   })
   
   //deleting the issue
-    .delete(function(req, res, next) {
-    var project = req.params.project;
-  
+    .delete(function(req, res) {
+    const project = req.params.project;
+    const issueId = req.body._id;
+    
+    if (!issueId) { //checking to see if the user entered issue _id in the input field
+      res.json('_id error');
+    } else { //_id entered=> proceed to delete the issue from the database
+      db.collection(project).deleteOne({_id: ObjectId(issueId)}, (err, obj) => {
+      err ? res.json("could not delete " + issueId) : res.json("deleted: " + issueId);
+      //console.log(issues);
+      db.close();
+    });
+    }
   });
     
 };
