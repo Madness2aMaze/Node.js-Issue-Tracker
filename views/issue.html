@@ -15,30 +15,29 @@
       <h1 id="projectTitle"></h1>
     </header>
     <center>
-      <div id="submitNewIssue">
-        <br>
-        <h3>Submit a new issue:</h3>
-        <form id="newIssue" method="post" action="/api/">
-          <input type="text" name="issue_title" placeholder="*Title" style="width: 353px; margin-bottom: 3px;" required><br>
-          <textarea type="text" name="issue_text" placeholder="*Text" style="width: 353px; height: 100px;" required></textarea><br>
-          <input type="text" name="created_by" placeholder="*Created by" style="width: 100px" required>
-          <input type="text" name="assigned_to" placeholder="(opt)Assigned to" style="width: 100px">
-          <input type="text" name="status_text" placeholder="(opt)Status text" style="width: 100px"><br>
-          <input type="submit" value="SUBMIT">
-        </form>
-      </div>
-      
+      <div class="new-section">
+        <div id="submitNewIssue">
+          <h3>Submit a new issue:</h3>
+          <form id="newIssue" method="post" action="/api/">
+            <input type="text" name="issue_title" placeholder="*Title" style="width: 353px; margin-bottom: 3px;" required><br>
+            <textarea type="text" name="issue_text" placeholder="*Text" style="width: 353px; height: 100px;" required></textarea><br>
+            <input type="text" name="created_by" placeholder="*Created by" style="width: 100px" required>
+            <input type="text" name="assigned_to" placeholder="(opt)Assigned to" style="width: 100px">
+            <input type="text" name="status_text" placeholder="(opt)Status text" style="width: 100px"><br>
+            <input type="submit" value="SUBMIT">
+          </form>
+        </div>
+      </div>  
       <div id="issueDisplay"></div>
-      
-      <hr style="margin: 50px; margin-top: 200px">
     </center>
     
     <script src="https://code.jquery.com/jquery-3.4.0.min.js" integrity="sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg=" crossorigin="anonymous" type="text/javascript"></script>
     <script>
       $(function() {
-        var currentProject = window.location.pathname.replace(/\//g, "");;
-        var url = "/api/issues/"+currentProject;
-        $('#projectTitle').text('All issues for: '+currentProject)
+        var currentProject = window.location.pathname.replace(/\//g, "");
+        var url = "/api/issues/" + currentProject;
+        $('#projectTitle').text('All issue entries for the project: ' + currentProject);        
+        $('#submitNewIssue h3').css("color", "#555");
         $.ajax({
           type: "GET",
           url: url,
@@ -50,18 +49,17 @@
               var openstatus;
               (ele.open) ? openstatus = 'open' : openstatus = 'closed';
               var single = [
-                '<div class="issue '+openstatus+'">',
-                '<p class="id">id: '+ele._id+'</p>',
-                '<h3>'+ele.issue_title+' -  ('+openstatus+')</h3>',
+                '<div class="issue ' + openstatus + '">',
+                '<p class="id id-code"><b>id:</b> ' + ele._id + '</p>',
+                '<h3 class="issueTitle">' + ele.issue_title + ' -  (' + openstatus + ')</h3>',
+                '<p class="issueText"><b>Details:</b> ' + ele.issue_text + '</p>',
+                '<p class="id"><b>Status:</b> ' + ele.status_text + '</p>',
+                '<p class="id"><b>Created by:</b> ' + ele.created_by + '  <b>Assigned to:</b> ' + ele.assigned_to,
                 '<br>',
-                '<p>'+ele.issue_text+'</p>',
-                '<p>'+ele.status_text+'</p>',
-                '<br>',
-                '<p class="id"><b>Created by:</b> '+ele.created_by+'  <b>Assigned to:</b> '+ele.assigned_to,
-                '<p class="id"><b>Created on:</b> '+ele.created_on+'  <b>Last updated:</b> '+ele.updated_on,
-                '<br><a href="#" class="closeIssue" id="'+ele._id+'">close?</a> <a href="#" class="deleteIssue" id="'+ele._id+'">delete?</a>',
-                '</div>'
-                
+                '<b>Created on:</b> ' + ele.created_on + '  <b>Last updated:</b> ' + ele.updated_on + '</p>',
+                '<hr style="border-color: transparent">',
+                '<a href="#" class="closeIssue" id="' + ele._id + '">close?</a> <a href="#" class="deleteIssue" id="' + ele._id + '">delete?</a>',
+                '</div>'                
               ];
               issues.push(single.join(''));
             });
@@ -80,8 +78,8 @@
           });
         });
         
-        $('#issueDisplay').on('click','.closeIssue', function(e) {
-          var url = "/api/issues/"+currentProject;
+        $('#issueDisplay').on('click', '.closeIssue', function(e) {
+          var url = "/api/issues/" + currentProject;
           $.ajax({
             type: "PUT",
             url: url,
@@ -90,13 +88,16 @@
           });
           e.preventDefault();
         });
-        $('#issueDisplay').on('click','.deleteIssue', function(e) {
-          var url = "/api/issues/"+currentProject;
+        $('#issueDisplay').on('click', '.deleteIssue', function(e) {
+          var url = "/api/issues/" + currentProject;
           $.ajax({
             type: "DELETE",
             url: url,
             data: {_id: $(this).attr('id')},
-            success: function(data) { alert(data); window.location.reload(true); }
+            success: function(data) { 
+              alert(data); window.location.reload(true); 
+              $('#issueDisplay').css("opacity", "0");
+            }
           });
           e.preventDefault();
         });
